@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
+    <meta name="generator" content="Hugo 0.83.1">
+    <title>NodeJs & Socket.IO - Creating a Login system</title>
+
+    <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/sign-in/">
+
+    
+
+    <!-- Bootstrap core CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+<meta name="theme-color" content="#7952b3">
+
+
+    <style>         /* Agregar estilos en la vista */
+	    html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #e5bcbcce;
+}
+
+.form-signin {
+  width: 100%;
+  max-width: 330px;
+  padding: 15px;
+  margin: auto;
+}
+.btn-primary {
+    color: #fff;
+    background-color: #dbd2a8;
+    border-color: #a79471;
+}
+.btn-warning {
+    color: #000;
+    background-color: #a1bbb6;
+    border-color: #aadbcc;
+}
+body {
+    font:12px arial;
+    color: #222;
+    text-align:center;
+    padding:35px; }
+  
+form, p, span {
+    margin:0;
+    padding:0; }
+  
+input { font:12px arial; }
+  
+a {
+    color:#0000FF;
+    text-decoration:none; }
+  
+    a:hover { text-decoration:underline; }
+  
+#wrapper, #loginform {
+    margin:0 auto;
+    padding-bottom:25px;
+    background:#EBF4FB;
+    width:504px;
+    border:1px solid #ACD8F0; }
+  
+#loginform { padding-top:18px; }
+  
+    #loginform p { margin: 5px; }
+  
+#chatbox {
+    text-align:left;
+    margin:0 auto;
+    margin-bottom:25px;
+    padding:10px;
+    background:#fff;
+    height:270px;
+    width:430px;
+    border:1px solid #c8bba6ea;
+    overflow:auto; }
+  
+#usermsg {
+    width:395px;
+    border:1px solid #ACD8F0; }
+  
+#submit { width: 60px; }
+  
+.error { color: #ff0000; }
+  
+#menu { padding:12.5px 25px 12.5px 25px; }
+  
+.welcome { float:left; }
+  
+.logout { float:right; }
+  
+.msgln { margin:0 0 2px 0; }
+
+
+.form-signin .checkbox {
+  font-weight: 400;
+}
+
+.form-signin .form-floating:focus-within {
+  z-index: 2;
+}
+
+.form-signin input[type="email"] {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.form-signin input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+    </style>
+
+    
+    <!-- Custom styles for this template -->
+    <link href="signin.css" rel="stylesheet">
+  </head>
+  <body class="text-center">
+    
+<main class="form-signin">
+    <h1 class="h3 mb-3 fw-normal">Iniciar sesión</h1>    <!-- Cremos el login -->
+
+    <div class="form-floating">
+      <input type="text" class="form-control" id="userName" placeholder="name@example.com" name="username">
+      <label for="floatingInput">Nombre de usuario</label>
+    </div>
+    <div class="form-floating">
+      <input type="password" class="form-control" id="Password" placeholder="Password" name="password">
+      <label for="floatingPassword">Contraseña</label>
+    </div>
+    <h5 class="h5 ">Salas Disponibles: </h5>  
+    <h8 class="h8 ">-Clase de Electronica</h8>  
+    <br>
+    <h8 class="h8 mb-3 fw-normal">-Clase de Cocina</h8>  
+    <br>
+    <div class="form-floating">
+      <select class= "form-select" name="rooms" id="rooms">
+        <option selected>Seleccionar sala</option>
+      </select>
+    </div>
+    <br>
+    <br>
+    <button class="w-100 btn btn-lg btn-primary" type="button" id="Login">Entrar</button>
+    <button class="w-100 btn btn-lg btn-warning" type="button" id="registrar" data-toggle="modal" data-target="#registro">Registrar</button>
+    <p class="mt-5 mb-3 text-muted">&copy; 2021</p>
+</main>
+
+		<div id="wrapper" style="display: none;">    <!-- Mostramos un mensaje de bienvenida tomando el nombre introducido obtenido de la base de datos -->
+			<div id="menu">
+    <p> Sala: <b id="SalaNombre"></b></p>    
+				<p class="bienvenido"> Conectado como <b id="usernameTag"></b>, con correo: <b id="emailUser"></b></p>
+				<p class="logout"><a id="exit" href="/">Salir del chat</a></p>
+			</div>
+			
+			<div id="chatbox">
+<!-- 				Caja del chat que contendrá todos los mensajes. -->
+			</div>
+			
+				<input name="usermsg" type="text" id="mensaje" size="63"/>
+				<input type="button" name="submitmsg" id="enviarMensaje" value="Enviar Mensaje"/>
+      <select class="form-control" name="roomsCambio" id="roomsCambio">
+        <option selected>Cambiar de sala</option>
+      </select>
+			
+		</div>
+	
+
+<!-- Modal -->
+<div class="modal fade" id="registro" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Registro</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-floating">
+	      <input type="text" class="form-control" id="userNameR" placeholder="name@example.com" name="username" required>
+	      <label for="floatingInput">Nombre de usuario</label>
+	    </div>
+	    <div class="form-floating">
+	      <input type="password" class="form-control" id="PasswordR" placeholder="Password" name="password" required>
+	      <label for="floatingPassword">Contraseña</label>
+	    </div>
+	    <div class="form-floating">
+	      <input type="email" class="form-control" id="correo" placeholder="correo" name="correo" required>
+	      <label for="floatingPassword">Correo</label>
+	    </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        <button type="button" class="btn btn-primary" id="sendResgistro">Registrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+	  $(document).ready(function(){
+		  
+      var socket = io();
+    let salas = [];
+
+      socket.emit('getSalas');
+
+      socket.on('Salas', function(data){
+        $.each(data, function(id, val){
+        $('#rooms').append($('<option>', {
+              value: data[id].nombre_sala,
+              text: data[id].nombre_sala,
+              id: data[id].id
+        }));
+
+        $('#roomsCambio').append($('<option>', {
+              value: data[id].nombre_sala,
+              text: data[id].nombre_sala,
+              id: data[id].id
+        }));
+      });
+      });
+
+      $('#roomsCambio').change(function(){
+        //roomID = $(this).val();
+        roomID = $(this).find('option:selected').attr('id');
+        roomName = $(this).find('option:selected').text();
+
+        /*roomID = roomID + 1;*/
+
+        $("#SalaNombre").text(roomName);
+        $("#chatbox").empty();
+
+        socket.emit('cambiodesala', {
+          idSala: roomID,
+          nombreSala: roomName
+        });
+        socket.emit('historial');
+        console.log('cambio select a ID: ' + roomID + 'con nombre ' + roomName);
+      });
+		  
+		  $("#Login").click(function(){   //Al entrar en login se mandan los parametros 
+			  socket.emit("login", {
+				  user: $("#userName").val(),   //Asignar valores
+          pass: $("#Password").val(),
+        roomID: $("#rooms").find('option:selected').attr('id'),
+      roomName: $("#rooms").find('option:selected').text()
+			  });
+		  });
+
+		  $("#sendResgistro").click(function(){     //Al agregar un nuevo usuario...
+		  		socket.emit("addUser", {              //Se mandan los parametros del nuevo usuario
+				  user: $("#userNameR").val(),
+				  pass: $("#PasswordR").val(),
+				  email: $("#correo").val(),
+			  });
+		  });
+		  
+		  $(".logout").click(function(){        //Salimos de la sesión 
+			  socket.emit("salir");             //Se manda el parametro de salir
+		  });
+		  
+		  $('#registrar').click(function(){
+			  $("#userNameR").val("");
+			  $("#PasswordR").val("");
+			  $("#correo").val("");
+		  });
+		  
+		  $('#enviarMensaje').click(function(){
+				if($("#mensaje").val().length <= 0){    //Si no hay un mensaje escrito...
+					alert("Escribe el mensaje para poderlo enviar.");     //  Se manda un mensaje que dice que debe escrivir uno 
+				}else{
+					var mensaje = $('#mensaje').val()   //Si se escribe el mensaje se le asigna un valor a lamvariable
+					socket.emit('mjsNuevo', mensaje); // Enviamos el nuevo mensaje a la función de mensaje nuevo y mandamos el parametro.
+
+				}
+			});
+
+			socket.on("logged_in", function(data){    //Recibimos parametros
+        console.log(data);
+				$(".form-signin").hide();
+				$("#wrapper").show();
+				$('#usernameTag').text(data.user);  //Le asignamos a usernameTag el valor de texto de data user para al decir "Bienvenido" aparezca el nombre del usuario conectado
+        $('#emailUser').text(data.email);   //Lo mismo pero con el email
+        $('#SalaNombre').text(data.room);   //Lo mismo pero con el email
+        socket.emit('historial');
+			});
+
+			socket.on("invalido", function(){
+				alert("Usuario y/o contraseña incorrectos.");
+			});
+
+			socket.on("error", function(){
+				alert("Error: Intenta de nuevo!");
+			});
+			
+			socket.on("vacio", function(){    //Recibe  la información de que los campos estan vacios 
+				alert("Error: Llena todos las campos.!");//Muestra un mensaje de alerta 
+			});
+			
+			socket.on("UsuarioOK", function(){    //Recibe
+				$('#registro').modal('hide');     //Esconder la modal
+				alert("Dado de alta correctamente.");
+			});
+			
+			socket.on('mensaje', function(data){ // Función que tiene de respuesta el nuevo mensaje, concatenamos e insertamos en la caja de chat.
+          
+        if(data.usuario == "BotChat"){
+          var nuevoMensaje =  '<small class="bot"><b>' + data.usuario + ' -</b> ' + data.mensaje + '</small>';
+        }else{
+          var nuevoMensaje = '<span class="mensajeEnviado"><b>' + data.usuario + ' dice: </b>'+ data.mensaje + '</span>';
+        }
+        $('#chatbox').append(nuevoMensaje + '</br>');
+        $('#mensaje').val("");
+        });
+        
+      socket.on('armadoHistorial', function(data){
+        var historial = "";
+        $.each(data, function(id, val){
+          historial += '<p class="mensajeEnviado"><b>' + data[id]['Username'] +
+      'dijo:</b> ' + data[id]['mensaje'] + '</p>';
+        });
+        historial += '<small class="bot"><b> BotChat -</b> Ultimos mensajes del historial de la sala</small>';
+        
+        $('#chatbox').append(historial + '</br>');
+      });
+
+    });
+</script>
+    
+  </body>
+</html>
